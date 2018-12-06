@@ -1,0 +1,39 @@
+
+setwd("C:/Users/Álvaro Recabarren/Desktop/Machine learning")
+rm(list = ls())
+Training=read.csv("training_data.csv",header = T)
+fix(Training)
+str(Training)
+dim(Training)
+# [1]  42 481
+plot(Training)
+
+#Variable de instancias desoredenadas "s"
+s<-sample(1:42,size = 42, replace = F)
+desordenados<-Training[s,]
+fix(desordenados)
+dim(desordenados)
+#[1]  42 481
+desordenados[1,]==Training[37,] #En este caso la instancia 37 del data set
+#original, deberia ser la primera del desordenados, segun el muestreo
+#Correcto
+
+#Vector de variable objetivo
+y <- desordenados[,1]
+length(y)
+fix(y)
+str(y)
+str(desordenados)
+y == desordenados[,1]  #Correcto
+
+#Vector de variables
+x<- desordenados[,2:481]
+fix(xs)
+#Normalización 
+norm <- as.data.frame(apply(x, 2, function(x) (x - min(x))/(max(x)-min(x))))
+fix(norm)
+pairs(norm[1:10])
+boxplot(norm$X1)
+attach(norm)
+boxplot(X1,X2,X3,X4,X5,X6,X7,X8,X9,X10) # SIN OUTLIERS
+boxplot(norm[1:20])
