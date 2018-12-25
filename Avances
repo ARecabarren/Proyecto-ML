@@ -1,39 +1,59 @@
-
+### Directorio de trabajo  ###
 setwd("C:/Users/Álvaro Recabarren/Desktop/Machine learning")
-rm(list = ls())
-Training=read.csv("training_data.csv",header = T)
-fix(Training)
-str(Training)
-dim(Training)
-# [1]  42 481
-plot(Training)
 
-#Variable de instancias desoredenadas "s"
+rm(list = ls())  ### Elimino datos en la memoria
+Training=read.csv("training_data.csv",header = T)  ### Importa datos de entrenamiento
+
+### Exploración de datos faltantes ###
+library(visdat)
+vis_miss(Training)
+
+### Vector para aleatorizar las instancias ###
 s<-sample(1:42,size = 42, replace = F)
 desordenados<-Training[s,]
-fix(desordenados)
-dim(desordenados)
-#[1]  42 481
-desordenados[1,]==Training[37,] #En este caso la instancia 37 del data set
-#original, deberia ser la primera del desordenados, segun el muestreo
-#Correcto
+desordenados2 <- subset(desordenados, select = -c(X122,X127,X202,X205,X206,X207,X208,X209,X210))
+### Ya se ha detectado que las columnas anteriores son redundantes ###
 
-#Vector de variable objetivo
-y <- desordenados[,1]
-length(y)
-fix(y)
-str(y)
-str(desordenados)
-y == desordenados[,1]  #Correcto
+### Vector de variable objetivo Y ###
+y <- desordenados2[,1]
+### Matriz de atributos X ###
+x<- desordenados2[,2:47]
 
-#Vector de variables
-x<- desordenados[,2:481]
-fix(xs)
-#Normalización 
+### Normalización 0-1 ###
 norm <- as.data.frame(apply(x, 2, function(x) (x - min(x))/(max(x)-min(x))))
-fix(norm)
-pairs(norm[1:10])
-boxplot(norm$X1)
-attach(norm)
-boxplot(X1,X2,X3,X4,X5,X6,X7,X8,X9,X10) # SIN OUTLIERS
-boxplot(norm[1:20])
+
+### Detectando valores atípicos con LOF ###
+library(lattice)
+library(grid)
+library(DMwR)
+outlier.score <- lofactor(norm, k=5)
+plot(density(outlier.score))
+outliers <- order(outlier.score, decreasing = T)[1:4] ###Lista de ranking decresciente
+outliers ### Cuáles son los outliers
+
+### Visualizacion de atipicos con PCA ###
+n <- nrow(norm)
+labels <- 1:n
+labels[-outliers] <- "."
+biplot(prcomp(norm), cex=.8, xlabs=labels)
+
+### Eliminando datos atipicos ###
+s.out <- norm[-c(2,7,27,32),]
+fix(s.out)
+
+### Redefiniendo vector de instancias ###
+y2 <- y[-c(2,7,27,32)]
+
+### Normalización con nuevos rangos ###
+x2 <- as.data.frame(apply(s.out,2,function(x) (x-min(x))/(max(x)-min(x))))
+
+### Creando Data-set limpio para entrenar ###
+library(miscTools)
+T.1 <-as.data.frame(insertCol(as.matrix(x2),1,y2))
+fix(T.1)
+write.csv(T.1, file = "T.1.csv") ### Primer dataset 
+### Para importarlo ###
+t.1 <- as.data.frame(read.csv("T.1.csv"))
+t.1 <-as.data.frame(t.1[,-1])
+
+### Visualización con PCA ###
